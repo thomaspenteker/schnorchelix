@@ -1,6 +1,7 @@
 #!/bin/sh -eu
 
 version=0.1
+rshell="ssh -F /dev/null -i"
 
 function usage() { # {{{
   echo "Usage: " $(basename $0) "COMMAND boxname
@@ -12,6 +13,12 @@ function usage() { # {{{
         boxname name of the box to configure with boxname.conf
 $(basename ${0%.sh}) version $version"; 
 } # }}} 
+
+# $1 command and params to execute
+remoteexec() { # {{{
+  # try to avoid ControlPersistent settings, see pushnetconfig for details
+  $rshell $key ${LOGIN}@$IP "$1"
+} # }}}
 
 if [ $# -lt 2 ]; then
   usage
@@ -30,20 +37,21 @@ else
 fi
 
 if [ $1 == "ssh" ]; then
-  ssh -i $key ${LOGIN}@$IP
+  #ssh -i $key ${LOGIN}@$IP
+  remoteexec ""
 fi
 
 if [ $1 == "shutdown" ]; then
-  ssh -i $key ${LOGIN}@$IP "sudo shutdown -h now"
+  remoteexec "sudo shutdown -h now"
 fi
 
 if [ $1 == "pcaps" ]; then
   echo current:
-  ssh -F /dev/null -i $key ${LOGIN}@$IP "find $BASE -maxdepth 1 -iname '*.pcap' -ls" || echo $BASE not found
+  remoteexec "find $BASE -maxdepth 1 -iname '*.pcap' -ls" || echo $BASE not found
   echo archived:
-  ssh -F /dev/null -i $key ${LOGIN}@$IP "test -d $BASE/archive && find $BASE/archive -iname '*.pcap' -ls" || true
+  remoteexec "test -d $BASE/archive && find $BASE/archive -iname '*.pcap' -ls" || true
   echo transfer in progress:
-  ssh -F /dev/null -i $key ${LOGIN}@$IP "test -d $BASE/archive && find $BASE/archive -iname '*.pcap.*' -ls" || true
+  remoteexec "test -d $BASE/archive && find $BASE/archive -iname '*.pcap.*' -ls" || true
 fi
 
 if [ $1 == "status" ]; then
@@ -54,9 +62,20 @@ if [ $1 == "status" ]; then
   fi
   ssh -o PasswordAuthentication=no -i $key ${LOGIN}@$IP echo success
   echo -n "tcpdump is.."
-  if ssh -i $key ${LOGIN}@$IP "pgrep -u $2 -o tcpdump > /dev/null"; then
+  if remoteexec "pgrep -u $2 -o tcpdump > /dev/null"; then
     echo running
   else
     echo not running
   fi
 fi
+
+if [ $1 == "start" ]; then
+  remoteexec "rm -f $BASE/stop"
+  remoteexec "$BASE/sniff-fpc.sh \& disown" &
+fi
+
+if [ $1 == "stop" ]; then
+  remoteexec "touch $BASE/stop"
+  remoteexec "killall -q -s SIGINT tcpdump"
+fi
+
