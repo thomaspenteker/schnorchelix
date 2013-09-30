@@ -7,9 +7,11 @@ function usage() { # {{{
   echo "Usage: " $(basename $0) "COMMAND boxname
         where COMMAND is one of:
           ssh      connect to boxname via ssh using its key
-          shutdown shutdown boxname
+          shutdown shutdown boxname (has to be enabled in /etc/sudoers)
           pcaps    list currently stored pcaps on boxname
           status   print status information of boxname
+          start    start tcpdump on boxname
+          stop     stop tcpdump on boxname
         boxname name of the box to configure with boxname.conf
 $(basename ${0%.sh}) version $version"; 
 } # }}} 
@@ -76,6 +78,7 @@ fi
 
 if [ $1 == "stop" ]; then
   remoteexec "touch $BASE/stop"
-  remoteexec "killall -q -s SIGINT tcpdump"
+  remoteexec "killall -q -s SIGINT tcpdump" || true
+  remoteexec "find $BASE -maxdepth 1 -name '*pcap' -type f -exec mv '{}' $BASE/archive \;"
 fi
 

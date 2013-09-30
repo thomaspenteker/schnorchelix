@@ -5,10 +5,13 @@ Image:
 - create a base user 'fpc'
 - net-fpc.sh goes to /usr/sbin with permissions (755) root:root
 - disable apparmor (to make tcpdump work) or create a proper profile
-- Add to /etc/sudoers:
+- Add to /etc/sudoers (there's a template file within this distribution):
   fpc ALL=(root) NOPASSWD: /usr/sbin/net-fpc.sh
   fpc ALL=(root) NOPASSWD: /usr/sbin/tcpdump
+- You should disallow password auth and root logins
 
-Script folder on the server:
+Server-side Setup
 ===============================
-- create template know_hosts containing your server's sshd-fingerprint
+- create a template known_hosts containing your server's sshd-fingerprint in the
+  same folder as setup-fpc.sh
+- create a datadir. dumps will be stored in /data/boxname by default

@@ -1,0 +1,29 @@
+#
+# This file MUST be edited with the 'visudo' command as root.
+#
+# Please consider adding local content in /etc/sudoers.d/ instead of
+# directly modifying this file.
+#
+# See the man page for details on how to write a sudoers file.
+#
+Defaults	env_reset
+Defaults	secure_path="/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Host alias specification
+
+# User alias specification
+
+# Cmnd alias specification
+
+# User privilege specification
+root	ALL=(ALL:ALL) ALL
+
+fpc ALL=(root) NOPASSWD: /usr/sbin/net-fpc.sh
+fpc ALL=(root) NOPASSWD: /usr/sbin/tcpdump
+
+# enable if fpc should be allowed to shutdown the box
+#fpc ALL=(root) NOPASSWD: /sbin/shutdown -h now
+
+# See sudoers(5) for more information on "#include" directives:
+
+#includedir /etc/sudoers.d
