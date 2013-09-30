@@ -1,7 +1,9 @@
 #!/bin/bash -eu
 
-if [ $# -lt 3 ]; then
-  echo usage: $0 IP Netmask Gateway
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+if [ $# -lt 4 ]; then
+  echo usage: $0 IP Netmask Gateway Hostname
   exit 1
 fi
 
@@ -16,14 +18,31 @@ valid_ip() {
   return 1
 }
 
+valid_host() {
+  if [[ $1 =~ ^[a-zA-Z0-9][a-zA-Z0-9]*$ ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 if ! valid_ip $1 || ! valid_ip $2 || ! valid_ip $3; then
+  exit 1
+fi
+
+if ! valid_host $4; then
   exit 1
 fi
 
 # point of no return
 trap '' SIGINT 2> /dev/null || trap ''  INT
 
-f=$(/usr/bin/mktemp)
+echo "$4" > /etc/hostname
+hostname "$4"
+sed -i '1d' /etc/hosts
+sed -i 1i127.0.0.1\ localhost\ "$4" /etc/hosts
+
+f=$(mktemp)
 
 # adjust to your needs
 /bin/cat > $f << EOF
@@ -53,4 +72,4 @@ EOF
 
 mv $f /etc/network/interfaces
 
-/usr/sbin/start networking > /dev/null
+start networking > /dev/null
