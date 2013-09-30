@@ -1,8 +1,9 @@
-#!/home/tek/bin/sh -eux
+#!/bin/sh -eu
 
 version=0.1
 rshell="ssh -F /dev/null -i"
 sftpgroup="fpc"
+# Directory that collects the boxes' PCAP files
 data=/data
 
 function usage() { # {{{
@@ -94,7 +95,7 @@ pushkey() { # {{{
 
   # TODO push private key for server communication, too
   #pushfiles key-fpc.sh $KEY ${KEY}.pub $config || echo failure pushing
-  pushfiles $KEY ${KEY}.pub $config || echo failure pushing
+  pushfiles $KEY ${KEY}.pub $config || (pushkey_failed; exit 1)
   #remoteexec "$BASE/key-fpc.sh ${KEY}"
   remoteexec "mkdir -p $BASE/.ssh"
   remoteexec "mv $KEY .ssh/id_rsa"
@@ -103,6 +104,13 @@ pushkey() { # {{{
   #remotedel "$BASE/key-fpc.sh $BASE/$config"
   #rm -f ${KEY}.old
 } # }}}
+
+pushkey_failed() { # {{{
+  echo failure pushing
+  # TODO oder, falls existierend alten Key wiederherstellen
+  rm $KEY ${KEY}.pub
+} # }}}
+
 
 # create a new public/private key pair $1{,.pub}
 genkey() { # {{{
@@ -131,7 +139,7 @@ checkcreateuser() { # {{{
 checkcreatelocaluser() { # {{{
   if [ $EUID != 0 ] ;then
     cmdpre=sudo
-    echo possibly prompting for sudo password:
+    echo possibly prompting for local sudo password:
   fi
   $cmdpre groupadd $sftpgroup 2>&1 | grep -v already\ exists || true
   $cmdpre useradd -b $data -m -g $sftpgroup $box 2>&1 | grep -v already\ exists || true
@@ -148,13 +156,15 @@ pushnetconfig() { # {{{
   pushfiles $config
   # make sure the conneciton exits otherwise (in case of ControlPersistent in
   # ssh it will hang for quite some time!
-  remoteexec "sudo /usr/sbin/net-fpc.sh $newip $NM $GW \&" &
+  remoteexec "sudo /usr/sbin/net-fpc.sh $newip $NM $GW ${config%.conf} \&" &
   IP=$newip
 } # }}}
 
 installfiles() { # {{{
   pushfiles $config 
-  pushfiles post-fpc.sh pushpcap-fpc.sh sniff-fpc.sh
+  pushfiles post-fpc.sh pushpcap-fpc.sh sniff-fpc.sh known_hosts
+  remoteexec "mkdir -p .ssh"
+  remoteexec "mv known_hosts .ssh"
   remoteexec "sed -i 1a\cd\ $BASE $BASE/sniff-fpc.sh"
   remoteexec "mkdir -p $BASE/archive"
   remoteexec "crontab -r 2>&1 | grep -v no\ crontab || true"
@@ -189,8 +199,14 @@ newkey() { # {{{
   echo
 } # }}}
 
-startstop() { # {{{
-  
+startdump() { # {{{
+  remoteexec "rm -f $BASE/stop"
+  remoteexec "sniff-fpc.sh"
+} # }}}
+
+stopdump() { # {{{
+  remoteexec "touch $BASE/stop"
+  remoteexec "killall -q -s SIGINT tcpdump"
 } # }}}
 
 main() {
