@@ -1,0 +1,14 @@
+Installation / Setup outline
+===============================
+Image:
+===============================
+- create a base user 'fpc'
+- net-fpc.sh goes to /usr/sbin with permissions (755) root:root
+- disable apparmor (to make tcpdump work) or create a proper profile
+- Add to /etc/sudoers:
+  fpc ALL=(root) NOPASSWD: /usr/sbin/net-fpc.sh
+  fpc ALL=(root) NOPASSWD: /usr/sbin/tcpdump
+
+Script folder on the server:
+===============================
+- create template know_hosts containing your server's sshd-fingerprint
