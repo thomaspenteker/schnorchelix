@@ -59,6 +59,13 @@ if [ $1 == "status" ]; then
   else
     echo not running
   fi
+  echo -n "crontabs are.."
+  if remoteexec "crontab -l | grep -q sniff-fpc.sh" && remoteexec "crontab -l | grep -q pushpcap-fpc.sh"; then
+    echo -n ""
+  else
+    echo -n "not "
+  fi
+  echo installed
 fi
 
 if [ $1 == "start" ]; then
