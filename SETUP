@@ -10,6 +10,11 @@ Image:
   fpc ALL=(root) NOPASSWD: /usr/sbin/tcpdump
 - You should disallow password auth and root logins
 
+
+OR 
+
+- use install-fpc.sh. Defaults: user fpc, IP: 192.168.1.22
+
 Server-side Setup
 ===============================
 - create a template known_hosts containing your server's sshd-fingerprint in the

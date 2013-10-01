@@ -1,15 +1,24 @@
 #!/bin/sh -eu
 
-version=0.1
-rshell="ssh -F /dev/null -i"
-sftpgroup="fpc"
-# Directory that collects the boxes' PCAP files
-data=/data
+. ${_%/*}/lib.sh
+# copy $@ to $IP:$BASE
+pushfiles() { # {{{
+  #echo key: ${masterkey:-$KEY}
+  #echo rsync -rp -e "$rshell ${masterkey:-$KEY}" $@ ${LOGIN}@$IP:$BASE
+  rsync -rp -e "$rshell ${masterkey:-$KEY}" $@ ${LOGIN}@$IP:$BASE
+} # }}}
+
+# $1 command and params to execute
+remoteexec() { # {{{
+  # try to avoid ControlPersistent settings, see pushnetconfig for details
+  $rshell ${masterkey:-$KEY} ${LOGIN}@$IP "$1"
+} # }}}
 
 function usage() { # {{{
   echo "Usage: " $(basename $0) "COMMAND boxname [OPTION]
         where COMMAND is one of:
-          install  copy new key, configuration and scripts to a box
+          install  copy new key, configuration and scripts to a PREPARED box
+                   (user install-fpc.sh for that)
           newkey   replace the current SSH key on a box
           start    start packet capture on a box
           stop     stop packet capture on a box
@@ -62,24 +71,6 @@ eecho() { # {{{
   echo $@ >&2
 } # }}}
 
-# copy $@ to $IP:$BASE
-pushfiles() { # {{{
-  #echo key: ${masterkey:-$KEY}
-  #echo rsync -rp -e "$rshell ${masterkey:-$KEY}" $@ ${LOGIN}@$IP:$BASE
-  rsync -rp -e "$rshell ${masterkey:-$KEY}" $@ ${LOGIN}@$IP:$BASE
-} # }}}
-
-readconfig() { # {{{
-  . ./$1
-  export KEY=${config%.conf}.key
-  export LOGIN=${LOGIN:-fpc}
-  export BASE=${BASE:-/home/${LOGIN}}
-  export box=${config%.conf}
-  export newip=$IP
-  # optionally overwrite with an optional IP
-  export IP=${currip:-$IP}
-} # }}}
-
 # push a new key to $IP, use our master key if necessary
 pushkey() { # {{{
   # use master key to push our new key
@@ -93,35 +84,17 @@ pushkey() { # {{{
   fi
   genkey $KEY
 
-  # TODO push private key for server communication, too
-  #pushfiles key-fpc.sh $KEY ${KEY}.pub $config || echo failure pushing
   pushfiles $KEY ${KEY}.pub $config || (pushkey_failed; exit 1)
-  #remoteexec "$BASE/key-fpc.sh ${KEY}"
   remoteexec "mkdir -p $BASE/.ssh"
   remoteexec "mv $KEY .ssh/id_rsa"
   remoteexec "mv ${KEY}.pub .ssh/authorized_keys"
   masterkey=""
-  #remotedel "$BASE/key-fpc.sh $BASE/$config"
-  #rm -f ${KEY}.old
 } # }}}
 
 pushkey_failed() { # {{{
   echo failure pushing
   # TODO oder, falls existierend alten Key wiederherstellen
   rm $KEY ${KEY}.pub
-} # }}}
-
-
-# create a new public/private key pair $1{,.pub}
-genkey() { # {{{
-  # create key without a passphrase, change if you like
-  ssh-keygen -q -t rsa -b 2048 -f $1 -P ''
-} # }}}
-
-# $1 command and params to execute
-remoteexec() { # {{{
-  # try to avoid ControlPersistent settings, see pushnetconfig for details
-  $rshell ${masterkey:-$KEY} ${LOGIN}@$IP "$1"
 } # }}}
 
 # beware.

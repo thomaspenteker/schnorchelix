@@ -1,7 +1,6 @@
 #!/bin/sh -eu
 
-version=0.1
-rshell="ssh -F /dev/null -i"
+. ${_%/*}/lib.sh
 
 function usage() { # {{{
   echo "Usage: " $(basename $0) "COMMAND boxname
@@ -16,21 +15,12 @@ function usage() { # {{{
 $(basename ${0%.sh}) version $version"; 
 } # }}} 
 
-# $1 command and params to execute
-remoteexec() { # {{{
-  # try to avoid ControlPersistent settings, see pushnetconfig for details
-  $rshell $key ${LOGIN}@$IP "$1"
-} # }}}
-
 if [ $# -lt 2 ]; then
   usage
   exit 1
 fi
 
-. ./${2}.conf
-export BASE=${BASE:-/home/${2}}
-export LOGIN=${LOGIN:-fpc}
-
+readconfig "${2}.conf"
 
 if ! test -s ${2}.key; then
   key=init.key
