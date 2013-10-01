@@ -12,4 +12,4 @@ if ! test -d $BASE/archive; then
   mkdir -p $BASE/archive
 fi
 
-mv $BASE/*.pcap $BASE/archive
+find $BASE/*.pcap -maxdepth 1 -exec mv '{}' $BASE/archive \;

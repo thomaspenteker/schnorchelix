@@ -17,11 +17,12 @@ remoteexec() { # {{{
 function usage() { # {{{
   echo "Usage: " $(basename $0) "COMMAND boxname [OPTION]
         where COMMAND is one of:
-          install  copy new key, configuration and scripts to a PREPARED box
-                   (user install-fpc.sh for that)
-          newkey   replace the current SSH key on a box
-          start    start packet capture on a box
-          stop     stop packet capture on a box
+          install   copy new key, configuration and scripts to a PREPARED box
+                    (user install-fpc.sh for that)
+          newconfig push a new config and restart packet capturing
+          newkey    replace the current SSH key on a box
+          start     start packet capture on a box
+          stop      stop packet capture on a box
         boxname name of the box to configure with boxname.conf
         [OPTION] may be a combination of:
         [-n] don't push network settings
@@ -38,7 +39,7 @@ getoptions() { # {{{
     exit 0
   fi
   case $1 in 
-    install|newkey|start|stop) mode=$1 shift 1 ;;
+    install|newkey|newconfig|start|stop) mode=$1 shift 1 ;;
     *) usage; exit 1 ;;
   esac
 
@@ -161,7 +162,7 @@ install() { # {{{
   checkcreateuser
   echo -n pushing config and scripts..
   installfiles
-  remoteexec "killall -q -s SIGINT tcpdump"
+  remoteexec "killall -q -s SIGINT tcpdump" || true
   echo
 } # }}}
 
@@ -172,15 +173,25 @@ newkey() { # {{{
   echo
 } # }}}
 
-startdump() { # {{{
+# TODO make sure ssh exits immediately after starting sniff-fpc.sh!
+start() { # {{{
   remoteexec "rm -f $BASE/stop"
-  remoteexec "sniff-fpc.sh"
+  remoteexec "./sniff-fpc.sh \&" &
 } # }}}
 
-stopdump() { # {{{
+stop() { # {{{
   remoteexec "touch $BASE/stop"
-  remoteexec "killall -q -s SIGINT tcpdump"
+  remoteexec "killall -q -s SIGINT tcpdump" || true &
 } # }}}
+
+newconfig() { # {{{
+  echo -n pushing new config..  
+  pushfiles $config 
+  echo
+  stop
+  start
+} # }}}
+
 
 main() {
 # always call this to make sure LOGIN, IP and KEY are filled with sane values
