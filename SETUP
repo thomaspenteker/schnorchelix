@@ -18,5 +18,6 @@ OR
 Server-side Setup
 ===============================
 - create a template known_hosts containing your server's sshd-fingerprint in the
-  same folder as setup-fpc.sh
+  same folder as setup-fpc.sh, it will get transfered to the slave box during
+  setup to make its ssh(1) shut up
 - create a datadir. dumps will be stored in /data/boxname by default
