@@ -69,13 +69,10 @@ if [ $1 == "status" ]; then
 fi
 
 if [ $1 == "start" ]; then
-  remoteexec "rm -f $BASE/stop"
-  remoteexec "$BASE/sniff-fpc.sh \& disown" &
+  start
 fi
 
 if [ $1 == "stop" ]; then
-  remoteexec "touch $BASE/stop"
-  remoteexec "killall -q -s SIGINT tcpdump" || true
-  remoteexec "find $BASE -maxdepth 1 -name '*pcap' -type f -exec mv '{}' $BASE/archive \;"
+  stop
 fi
 

@@ -173,17 +173,6 @@ newkey() { # {{{
   echo
 } # }}}
 
-# TODO make sure ssh exits immediately after starting sniff-fpc.sh!
-start() { # {{{
-  remoteexec "rm -f $BASE/stop"
-  remoteexec "./sniff-fpc.sh \&" &
-} # }}}
-
-stop() { # {{{
-  remoteexec "touch $BASE/stop"
-  remoteexec "killall -q -s SIGINT tcpdump" || true &
-} # }}}
-
 newconfig() { # {{{
   echo -n pushing new config..  
   pushfiles $config 
@@ -191,7 +180,6 @@ newconfig() { # {{{
   stop
   start
 } # }}}
-
 
 main() {
 # always call this to make sure LOGIN, IP and KEY are filled with sane values

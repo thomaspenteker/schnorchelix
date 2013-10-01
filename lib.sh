@@ -35,3 +35,15 @@ genkey() { # {{{
   # create key without a passphrase, change if you like
   ssh-keygen -q -t rsa -b 2048 -f $1 -P ''
 } # }}}
+
+# TODO make sure ssh exits immediately after starting sniff-fpc.sh!
+start() { # {{{
+  remoteexec "rm -f $BASE/stop"
+  remoteexec "$BASE/sniff-fpc.sh \& disown" &
+} # }}}
+
+stop() { # {{{
+  remoteexec "touch $BASE/stop"
+  remoteexec "killall -q -s SIGINT tcpdump" || true &
+  remoteexec "find $BASE -maxdepth 1 -name '*pcap' -type f -exec mv '{}' $BASE/archive \;"
+} # }}}
