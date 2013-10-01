@@ -3,7 +3,8 @@
 mv known_hosts .ssh
 
 sudo install -m 440 -o root -g root  sshd_config /etc/ssh
-sudo install -m 755 -o root -g root  net-fpc.sh /usr/sbin
+# TODO check if this _works_ works
+sudo install -m 4755 -o root -g root  net-fpc.sh /usr/sbin
 
 # after this step the fpc user is locked-down!
 sudo install -m 440 -o root -g root  sudoers /etc/sudoers
