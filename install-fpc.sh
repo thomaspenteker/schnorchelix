@@ -18,6 +18,7 @@ readconfig ${1}.conf
 
 if [ -e ${1}.key ]; then
   echo You have to remove the existing key ${1}.key for the box first
+  echo Also make sure that the master allows you to login to your box
   exit 1
 fi
 

@@ -3,7 +3,7 @@ Installation / Setup outline
 Image:
 ===============================
 - create a base user 'fpc'
-- net-fpc.sh goes to /usr/sbin with permissions (755) root:root
+- net-fpc.sh goes to /usr/sbin with permissions (4755) root:root
 - disable apparmor (to make tcpdump work) or create a proper profile
 - Add to /etc/sudoers (there's a template file within this distribution):
   fpc ALL=(root) NOPASSWD: /usr/sbin/net-fpc.sh
@@ -14,6 +14,7 @@ Image:
 OR 
 
 - use install-fpc.sh. Defaults: user fpc, IP: 192.168.1.22
+  (it uses the template sudoers, sshd_config and known_hosts provided)
 
 Server-side Setup
 ===============================
